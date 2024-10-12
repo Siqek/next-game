@@ -11,6 +11,9 @@ export default function Game ()
     const [ currentCountry, setCurrentCountry ] = useState(null);
     
     const [ cca3Map, setCca3Map ] = useState({});
+    const [ countryGroupsMap, setCountryGroupsMap ] = useState({});
+
+    const [ gameMode, setGameMode ] = useState(0); // maybe dynamic route? /game/[gameMode]?
 
     const [ score, setScore ] = useState(0);
 
@@ -27,8 +30,13 @@ export default function Game ()
                 json = json.filter(country => country.borders);
                 // filters out countries such as the UK and Ireland, which only share a border with each other
                 json = json.filter(c => !(c.borders.length === 1 && json.find(c2 => c2.cca3 === c.borders[0]).borders.length === 1));
-                console.log(json);
-                
+
+                let country_groups_map = {};
+                // group1 => Europe; Asia; Africa; Oceania
+                country_groups_map.group1 = json.filter(c => ['Europe', 'Asia', 'Africa', 'Oceania'].includes(c.continents[0])).map(c => c.cca3);
+                // group2 => North America; South America
+                country_groups_map.group2 = json.filter(c => ['North America', 'South America'].includes(c.continents[0])).map(c => c.cca3)
+
                 // creates map: cca3 code -> index
                 let cca3_map = {};
                 json.forEach((country, index) => {
@@ -37,6 +45,7 @@ export default function Game ()
 
                 setAllCountries(json);
                 setCca3Map(cca3_map);
+                setCountryGroupsMap(country_groups_map);
             } catch (err) {
                 console.error(err);
                 setError(true);
@@ -48,13 +57,16 @@ export default function Game ()
     }, []);
 
     useEffect(() => {
-        if (!allCountries || !Object.keys(cca3Map).length)
+        if (!allCountries 
+            || !Object.keys(cca3Map).length
+            || !Object.keys(countryGroupsMap).length) {
             return;
+        };
 
         // start the game
         setNewTargetCountry();
 
-    }, [allCountries, cca3Map]);
+    }, [allCountries, cca3Map, countryGroupsMap]);
 
     useEffect(() => {
         if (targetCountry)
@@ -91,10 +103,7 @@ export default function Game ()
         for (const neighborCode of country.borders) {
             borderingCountries.push(...allCountries[cca3Map[neighborCode]].borders);
         };
-        borderingCountries = [...new Set(borderingCountries)].filter(code => !country.borders.includes(code) && code !== country.cca3);
-
-        console.log(borderingCountries);
-        return borderingCountries;
+        return [...new Set(borderingCountries)].filter(code => !country.borders.includes(code) && code !== country.cca3);
     }
 
     function setNewCurrentCountry ()
@@ -135,7 +144,10 @@ export default function Game ()
                             <CountryCard country={targetCountry} />
                         </div>
                     </div>
-                    <Borders borders={currentCountry?.borders} getCountry={_getCountry} onClick={_onClick} />
+                    <div className='h-2/5'>
+                        <h1 className='text-lg text-center py-2'>Where do you want to go?</h1>
+                        <Borders borders={currentCountry?.borders} getCountry={_getCountry} onClick={_onClick} />
+                    </div>
                 </>
             }
         </div>
