@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Borders from '@/Components/Game/Borders';
 import CountryCard from '@/Components/Game/CountryCard';
 
-export default function Game ()
+export default function Game ({ gameMode, back_to_menu })
 {
     const [ allCountries, setAllCountries ] = useState(null);
     const [ targetCountry, setTargetCountry ] = useState(null);
@@ -12,8 +12,6 @@ export default function Game ()
     
     const [ cca3Map, setCca3Map ] = useState({});
     const [ countryGroupsMap, setCountryGroupsMap ] = useState({});
-
-    const [ gameMode, setGameMode ] = useState(0); // maybe dynamic route? /game/[gameMode]?
 
     const [ score, setScore ] = useState(0);
 
@@ -32,10 +30,10 @@ export default function Game ()
                 json = json.filter(c => !(c.borders.length === 1 && json.find(c2 => c2.cca3 === c.borders[0]).borders.length === 1));
 
                 let country_groups_map = {};
-                // group1 => Europe; Asia; Africa; Oceania
-                country_groups_map.group1 = json.filter(c => ['Europe', 'Asia', 'Africa', 'Oceania'].includes(c.continents[0])).map(c => c.cca3);
-                // group2 => North America; South America
-                country_groups_map.group2 = json.filter(c => ['North America', 'South America'].includes(c.continents[0])).map(c => c.cca3)
+                // 0 (group1) => Europe; Asia; Africa; Oceania
+                country_groups_map['0'] = json.filter(c => ['Europe', 'Asia', 'Africa', 'Oceania'].includes(c.continents[0])).map(c => c.cca3);
+                // 1 (group2) => North America; South America
+                country_groups_map['1'] = json.filter(c => ['North America', 'South America'].includes(c.continents[0])).map(c => c.cca3)
 
                 // creates map: cca3 code -> index
                 let cca3_map = {};
@@ -91,9 +89,20 @@ export default function Game ()
         return Math.floor(Math.random() * numOfElements);
     };
 
-    function setNewTargetCountry () {
-        let newTargetCountry = allCountries[getRandomIndex(allCountries.length)];
-        setTargetCountry(newTargetCountry);
+    function setNewTargetCountry ()
+    {
+        if (gameMode === 'easy') {
+            let newTargetCountry = allCountries[getRandomIndex(allCountries.length)];
+            setTargetCountry(newTargetCountry);
+        } else if (gameMode === 'random')
+        {
+            let groupIndex = getRandomIndex(2)
+            let group = countryGroupsMap[groupIndex];
+            let targetCode = group[getRandomIndex(group.length)];
+            let newTargetCountry = allCountries[cca3Map[targetCode]];
+            newTargetCountry.group = groupIndex;
+            setTargetCountry(newTargetCountry);
+        };
     };
 
     function findSecondDegreeNeighbors (country)
@@ -108,27 +117,37 @@ export default function Game ()
 
     function setNewCurrentCountry ()
     {
-        let neighborsCodes = findSecondDegreeNeighbors(targetCountry);
-        if (!neighborsCodes.length) {
-            setNewTargetCountry();
+        if (gameMode === 'easy')
+        {
+            let neighborsCodes = findSecondDegreeNeighbors(targetCountry);
+            if (!neighborsCodes.length) {
+                setNewTargetCountry();
+            };
+            let neighborCode = neighborsCodes[getRandomIndex(neighborsCodes.length)];
+            setCurrentCountry(allCountries[cca3Map[neighborCode]]);
+        } else if (gameMode === 'random')
+        {
+            let neighbors = targetCountry.borders;
+            let nonNeighbors = countryGroupsMap[targetCountry.group].filter(c => !neighbors.includes(c) && c !== targetCountry.cca3);
+            let coutryCode = nonNeighbors[getRandomIndex(nonNeighbors.length)];
+            setCurrentCountry(allCountries[cca3Map[coutryCode]]);
         };
-        let neighborCode = neighborsCodes[getRandomIndex(neighborsCodes.length)];
-        setCurrentCountry(allCountries[cca3Map[neighborCode]]);
     };
 
 
     // callbacks
     
-    function _getCountry (code) {
+    function get_country (code) {
         return allCountries[cca3Map[code]];
     }
 
-    function _onClick (code) {
+    function on_click (code) {
         setCurrentCountry(allCountries[cca3Map[code]]);
     };
 
     return (
         <div className='w-full h-full flex flex-col justify-center items-center'>
+            <button onClick={back_to_menu} className='absolute top-0 left-0 w-[150px] h-fit border rounded-full p-2 m-2 hover:bg-[#ffffff60] text-sm'>Back to menu</button>
             {error && <h1>Nie udało się pobrać danych</h1>}
             {loading && <h1>Pobieranie danych....</h1>}
             {currentCountry && targetCountry &&
@@ -144,9 +163,9 @@ export default function Game ()
                             <CountryCard country={targetCountry} />
                         </div>
                     </div>
-                    <div className='h-2/5'>
+                    <div className='h-2/5 overflow-auto'>
                         <h1 className='text-lg text-center py-2'>Where do you want to go?</h1>
-                        <Borders borders={currentCountry?.borders} getCountry={_getCountry} onClick={_onClick} />
+                        <Borders borders={currentCountry?.borders} getCountry={get_country} onClick={on_click} />
                     </div>
                 </>
             }
