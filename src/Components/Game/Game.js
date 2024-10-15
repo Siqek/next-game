@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+
 import Borders from '@/Components/Game/Borders';
 import CountryCard from '@/Components/Game/CountryCard';
+
+import Map from '../Map/MapDynamic';
 
 export default function Game ({ gameMode, back_to_menu })
 {
@@ -12,6 +15,10 @@ export default function Game ({ gameMode, back_to_menu })
     
     const [ cca3Map, setCca3Map ] = useState({});
     const [ countryGroupsMap, setCountryGroupsMap ] = useState({});
+
+    const [ visitedCountries, setVisitedCountries ] = useState(null);
+
+    const [ isMapVisible, setIsMapVisible ] = useState(false);
 
     const [ score, setScore ] = useState(0);
 
@@ -68,12 +75,20 @@ export default function Game ({ gameMode, back_to_menu })
 
     useEffect(() => {
         if (targetCountry)
+        {
             setNewCurrentCountry();
+            setVisitedCountries(null);
+        };
     }, [targetCountry]);
 
     useEffect(() => {
         if (!currentCountry)
             return;
+
+        setVisitedCountries(prev => {
+            if (!prev) return [currentCountry.cca3];
+            return [...prev, currentCountry.cca3];
+        });
 
         if (currentCountry === targetCountry)
             setScore(prev => prev + 1);
@@ -147,10 +162,23 @@ export default function Game ({ gameMode, back_to_menu })
 
     return (
         <div className='w-full h-full flex flex-col justify-center items-center'>
-            <button onClick={back_to_menu} className='absolute top-0 left-0 w-[150px] h-fit border rounded-full p-2 m-2 hover:bg-[#ffffff60] text-sm'>Back to menu</button>
+            <button 
+                onClick={back_to_menu}
+                className='absolute top-0 left-0 w-[150px] h-fit border rounded-full p-2 m-2 hover:bg-[#ffffff60] text-sm'
+            >
+                Back to menu
+            </button>
+            <button 
+                onClick={() => setIsMapVisible(prev => !prev)}
+                className={`absolute top-0 right-0 z-50 w-[150px] bg-[#1a1a1a] h-fit border rounded-full p-2 m-2 text-sm 
+                    ${isMapVisible ? 'hover:bg-[#707070]' : 'hover:bg-[#ffffff60]'}`}
+            >
+                    {isMapVisible ? 'Hide map' : 'Show map'}
+            </button>
+            { isMapVisible && <Map countries={visitedCountries} target={targetCountry.cca3} /> }
             {error && <h1>Nie udało się pobrać danych</h1>}
             {loading && <h1>Pobieranie danych....</h1>}
-            {currentCountry && targetCountry &&
+            {currentCountry && targetCountry && !isMapVisible &&
                 <>
                     <h1 className='text-2xl h-1/6 flex items-center justify-center'>Your score: {score}</h1>
                     <div className='flex flex-row items-center justify-evenly w-full h-1/3'>
