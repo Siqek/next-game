@@ -22,16 +22,29 @@ export default function Map ({ countries, target, current })
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 {
-                    json.features.filter(country => countries.includes(country.id) || target === country.id)?.map(country => (
-                        <GeoJSON
+                    json.features.filter(country => countries.includes(country.id) || target === country.id)?.map(country => {
+                        let color = 'blue';
+                        switch (country.id)
+                        {
+                            case target:
+                                color = 'red';
+                                break;
+                            case countries[0]:
+                                color = 'green';
+                                break;
+                            case current:
+                                color = 'purple';
+                                break;
+                        };
+                        return <GeoJSON
                             key={country.id}
                             data={country}
                             style={{
-                                color: `${target === country.id ? 'red' : country.id === countries[0] ? 'green' : country.id === current ? 'purple' : 'blue'}`,
+                                color: `${color}`,
                                 weight: '1'
                             }}
                         />
-                    ))
+                    })
                 }
             </MapContainer>
             <div className='absolute z-20 -bottom-0 -right-0 p-4 mb-8 rounded-l-2xl border border-[#1a1a1a] w-fit h-fit bg-[#1a1a1acc]'>
