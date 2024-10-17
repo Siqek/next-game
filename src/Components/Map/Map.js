@@ -4,7 +4,7 @@ import json from '@/resources/countries.geo.json';
 
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 
-export default function Map ({ countries, target })
+export default function Map ({ countries, target, current })
 {
     return (
         <>
@@ -27,20 +27,22 @@ export default function Map ({ countries, target })
                             key={country.id}
                             data={country}
                             style={{
-                                color: `${target === country.id ? 'red' : country.id === countries[0] ? 'green' : 'blue'}`,
+                                color: `${target === country.id ? 'red' : country.id === countries[0] ? 'green' : country.id === current ? 'purple' : 'blue'}`,
                                 weight: '1'
                             }}
                         />
                     ))
                 }
             </MapContainer>
-            <div className='absolute z-20 -bottom-0 -right-0 p-4 mb-8 rounded-l-2xl border border-[#1a1a1a] w-fit h-fit bg-[#1a1a1a1a]'>
+            <div className='absolute z-20 -bottom-0 -right-0 p-4 mb-8 rounded-l-2xl border border-[#1a1a1a] w-fit h-fit bg-[#1a1a1acc]'>
                 {[
-                    { textColor: 'text-[#1a1a1a]',  content: 'LEGEND' },
+                    { textColor: 'text-white',  content: 'LEGEND' },
                     { textColor: 'text-red-500',    content: "- RED -" },
                     { textColor: 'text-red-500',    content: 'Your destination country' },
                     { textColor: 'text-green-500',  content: '- GREEN -' },
                     { textColor: 'text-green-500',  content: 'Your starting country' },
+                    { textColor: 'text-purple-500',  content: '- PURPLE -' },
+                    { textColor: 'text-purple-500',  content: 'Current contry' },
                     { textColor: 'text-blue-500',   content: '- BLUE -' },
                     { textColor: 'text-blue-500',   content: 'Countries you have visited' }
                 ].map(({textColor, content}, index) => (

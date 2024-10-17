@@ -175,7 +175,7 @@ export default function Game ({ gameMode, back_to_menu })
             >
                     {isMapVisible ? 'Hide map' : 'Show map'}
             </button>
-            { isMapVisible && <Map countries={visitedCountries} target={targetCountry.cca3} /> }
+            { isMapVisible && <Map countries={visitedCountries} target={targetCountry.cca3} current={currentCountry.cca3} /> }
             {error && <h1>Nie udało się pobrać danych</h1>}
             {loading && <h1>Pobieranie danych....</h1>}
             {currentCountry && targetCountry && !isMapVisible &&
